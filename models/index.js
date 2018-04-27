@@ -7,10 +7,14 @@ const Page = db.define('page', {
   title: {
     type: Sequelize.STRING,
     allowNull: false,
+    validate: {
+      is: /[\w\s]+/,
+    },
   },
   slug: {
     type: Sequelize.STRING,
     allowNull: false,
+    unique: true,
     validate: {
       notContains: ' ',
     },
@@ -22,6 +26,29 @@ const Page = db.define('page', {
   status: {
     type: Sequelize.ENUM('open', 'closed'),
   },
+});
+
+Page.beforeValidate(page => {
+  const generateRdmStr = () => {
+    let text = '';
+    let possible =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+    for (let i = 0; i < 10; i++) {
+      text += possible[Math.floor(Math.random() * possible.length)];
+    }
+    return text;
+  };
+
+  const makeSlug = title => {
+    if (title) {
+      return title.replace(/\s+/g, '_').replace(/\W/g, '');
+    } else {
+      return generateRdmStr();
+    }
+  };
+
+  page.slug = makeSlug(page.title);
 });
 
 const User = db.define('user', {

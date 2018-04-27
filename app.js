@@ -8,7 +8,7 @@ const app = express();
 
 app.use(morgan('dev'));
 app.use(express.static(__dirname + '/public'));
-app.use(bodyParser.urlencoded({ exrended: false }));
+app.use(bodyParser.urlencoded({ exrended: true }));
 app.use(bodyParser.json());
 app.use('/user', require('./routes/user'));
 app.use('/wiki', require('./routes/wiki'));
@@ -18,7 +18,7 @@ db.authenticate().then(() => {
 });
 
 app.get('/', (req, res, next) => {
-  res.send('hello world');
+  res.redirect('/wiki');
 });
 
 const syncDB = async () => {
