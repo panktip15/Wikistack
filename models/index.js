@@ -3,21 +3,19 @@ const db = new Sequelize('postgres://localhost:5432/wikistack', {
   logging: false,
 });
 
+db.authenticate().then(() => {
+  console.log('Connected to DB successfully');
+});
+
 const Page = db.define('page', {
   title: {
     type: Sequelize.STRING,
     allowNull: false,
-    validate: {
-      is: /[\w\s]+/,
-    },
   },
   slug: {
     type: Sequelize.STRING,
     allowNull: false,
     unique: true,
-    validate: {
-      notContains: ' ',
-    },
   },
   content: {
     type: Sequelize.TEXT,
@@ -28,27 +26,14 @@ const Page = db.define('page', {
   },
 });
 
+const makeSlug = title => {
+  return title.replace(/\s+/g, '_').replace(/\W/g, '');
+};
+
 Page.beforeValidate(page => {
-  const generateRdmStr = () => {
-    let text = '';
-    let possible =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-    for (let i = 0; i < 10; i++) {
-      text += possible[Math.floor(Math.random() * possible.length)];
-    }
-    return text;
-  };
-
-  const makeSlug = title => {
-    if (title) {
-      return title.replace(/\s+/g, '_').replace(/\W/g, '');
-    } else {
-      return generateRdmStr();
-    }
-  };
-
-  page.slug = makeSlug(page.title);
+  if (!page.slug) {
+    page.slug = makeSlug(page.title);
+  }
 });
 
 const User = db.define('user', {
@@ -64,6 +49,9 @@ const User = db.define('user', {
     },
   },
 });
+
+Page.belongsTo(User, { as: 'author' });
+User.hasMany(Page, { foreignKey: 'authorId' });
 
 module.exports = {
   db,
